@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>7K Shell - Complete Windows Shell Replacement</title>
+    <style>
+        :root {
+            --gable-green: #13262f;
+            --timberwolf: #d3d0cb;
+            --chathams-blue: #17557b;
+            --calypso: #366e8d;
+            --glass: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0a0e1a 0%, #1a2332 50%, #0f1823 100%);
+            color: var(--timberwolf);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        .animated-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(23, 85, 123, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(54, 110, 141, 0.2) 0%, transparent 50%),
+                radial-gradient(circle at 40% 20%, rgba(19, 38, 47, 0.4) 0%, transparent 50%);
+            animation: bgShift 20s ease-in-out infinite;
+        }
+        
+        @keyframes bgShift {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(-20px, -10px) scale(1.05); }
+            66% { transform: translate(20px, 10px) scale(0.95); }
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            position: relative;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 60px;
+            animation: fadeInDown 0.8s ease-out;
+        }
+        
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        h1 {
+            font-size: 4.5em;
+            font-weight: 300;
+            letter-spacing: -2px;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, var(--timberwolf) 0%, var(--calypso) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 60px rgba(211, 208, 203, 0.3);
+        }
+        
+        .subtitle {
+            font-size: 1.3em;
+            color: rgba(211, 208, 203, 0.7);
+            font-weight: 300;
+        }
+        
+        .glass-card {
+            background: var(--glass);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 
+                0 8px 32px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            animation: fadeInUp 0.8s ease-out backwards;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .glass-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 
+                0 12px 40px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.15);
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .warning-card {
+            background: linear-gradient(135deg, rgba(255, 152, 0, 0.1), rgba(255, 87, 34, 0.1));
+            border: 1px solid rgba(255, 152, 0, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            animation-delay: 0.2s;
+        }
+        
+        .warning-icon {
+            font-size: 2.5em;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin: 40px 0;
+        }
+        
+        .feature-card {
+            background: var(--glass);
+            backdrop-filter: blur(15px);
+            border-radius: 16px;
+            border: 1px solid var(--glass-border);
+            padding: 25px;
+            text-align: center;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            animation: fadeInUp 0.8s ease-out backwards;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .feature-card:nth-child(1) { animation-delay: 0.1s; }
+        .feature-card:nth-child(2) { animation-delay: 0.2s; }
+        .feature-card:nth-child(3) { animation-delay: 0.3s; }
+        .feature-card:nth-child(4) { animation-delay: 0.4s; }
+        
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+            transform: rotate(45deg);
+            transition: opacity 0.3s;
+            opacity: 0;
+        }
+        
+        .feature-card:hover::before {
+            opacity: 1;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 
+                0 20px 40px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+        
+        .feature-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+            display: inline-block;
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        .feature-card:nth-child(odd) .feature-icon {
+            animation-delay: 0.5s;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .code-preview {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+            overflow-x: auto;
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+            font-size: 0.9em;
+            line-height: 1.6;
+            color: #e0e0e0;
+            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.3);
+            animation-delay: 0.6s;
+        }
+        
+        .code-preview code {
+            display: block;
+            white-space: pre;
+        }
+        
+        .file-structure {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            padding: 25px;
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 0.95em;
+            line-height: 1.8;
+            color: var(--timberwolf);
+            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.2);
+            animation-delay: 0.7s;
+        }
+        
+        .download-section {
+            text-align: center;
+            margin: 60px 0;
+            padding: 40px;
+            background: linear-gradient(135deg, var(--chathams-blue), var(--calypso));
+            border-radius: 20px;
+            box-shadow: 
+                0 10px 40px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            position: relative;
+            overflow: hidden;
+            animation-delay: 0.8s;
+        }
+        
+        .download-section::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
+            animation: rotate 20s linear infinite;
+        }
+        
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .download-btn {
+            display: inline-block;
+            padding: 18px 50px;
+            background: var(--gable-green);
+            color: var(--timberwolf);
+            text-decoration: none;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1.3em;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 
+                0 6px 20px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            position: relative;
+            z-index: 1;
+            cursor: pointer;
+            border: none;
+            outline: none;
+        }
+        
+        .download-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 
+                0 10px 30px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.15);
+            background: #0a1920;
+        }
+        
+        .download-btn:active {
+            transform: translateY(-1px);
+        }
+        
+        .demo-section {
+            margin: 50px 0;
+        }
+        
+        .demo-container {
+            background: #000;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            position: relative;
+            animation-delay: 0.9s;
+        }
+        
+        .demo-header {
+            background: #1a1a1a;
+            padding: 10px 15px;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        
+        .demo-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #ff5f57;
+        }
+        
+        .demo-dot:nth-child(2) { background: #ffbd2e; }
+        .demo-dot:nth-child(3) { background: #28ca42; }
+        
+        .demo-content {
+            padding: 30px;
+            background: linear-gradient(135deg, #0a0e1a, #1a2332);
+            min-height: 400px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* Mini dock simulation */
+        .mini-dock {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .dock-item {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--chathams-blue), var(--calypso));
+            border-radius: 12px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+        
+        .dock-item:hover {
+            transform: translateY(-10px) scale(1.2);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .dock-indicator {
+            position: absolute;
+            bottom: -8px;
+            width: 4px;
+            height: 4px;
+            background: var(--timberwolf);
+            border-radius: 50%;
+            opacity: 0.8;
+        }
+        
+        /* Mini sidebar simulation */
+        .mini-sidebar {
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            width: 200px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 15px;
+        }
+        
+        .mini-widget {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .mini-widget h4 {
+            font-size: 0.9em;
+            margin-bottom: 5px;
+            color: var(--calypso);
+        }
+        
+        .mini-widget p {
+            font-size: 0.8em;
+            color: rgba(211, 208, 203, 0.8);
+        }
+        
+        @media (max-width: 768px) {
+            h1 { font-size: 3em; }
+            .features-grid { grid-template-columns: 1fr; }
+            .glass-card { padding: 20px; }
+        }
+        
+        /* Loading animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--timberwolf);
+            animation: spin 1s ease-in-out infinite;
+            margin-left: 10px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="animated-bg"></div>
+    
+    <div class="container">
+        <div class="header">
+            <h1>7K Shell</h1>
+            <p class="subtitle">Next-Generation Windows Shell with Liquid Glass UI</p>
+        </div>
+        
+        <div class="glass-card warning-card">
+            <div class="warning-icon">⚠️</div>
+            <div>
+                <h3>Important Safety Notice</h3>
+                <p>This is a complete Windows shell replacement. Always test in user mode first and maintain recovery scripts before replacing explorer.exe system-wide.</p>
+            </div>
+        </div>
+        
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">🎯</div>
+                <h3>Magnetic Dock</h3>
+                <p>Mac-style dock with smooth magnification, auto-hide, app indicators, and drag-to-reorder functionality</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">📊</div>
+                <h3>Widget Sidebar</h3>
+                <p>Customizable widgets with liquid glass backgrounds including Todo, Clock, System Stats, and more</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">🔍</div>
+                <h3>Instant Search</h3>
+                <p>Lightning-fast launcher with fuzzy matching, file indexing, and web search integration</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">✨</div>
+                <h3>Liquid Glass UI</h3>
+                <p>Beautiful acrylic blur effects, smooth animations, and modern design throughout</p>
+            </div>
+        </div>
+        
+        <div class="glass-card">
+            <h2>Live Demo Preview</h2>
+            <div class="demo-container">
+                <div class="demo-header">
+                    <div class="demo-dot"></div>
+                    <div class="demo-dot"></div>
+                    <div class="demo-dot"></div>
+                </div>
+                <div class="demo-content">
+                    <div class="mini-sidebar">
+                        <div class="mini-widget">
+                            <h4>📝 Todo List</h4>
+                            <p>✓ Complete UI design<br>○ Test animations<br>○ Deploy shell</p>
+                        </div>
+                        <div class="mini-widget">
+                            <h4>🕐 Clock</h4>
+                            <p>12:34 PM<br>Sunday, Sept 7</p>
+                        </div>
+                        <div class="mini-widget">
+                            <h4>💻 System</h4>
+                            <p>CPU: 25%<br>RAM: 4.2 GB</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mini-dock">
+                        <div class="dock-item">🎨<div class="dock-indicator"></div></div>
+                        <div class="dock-item">📁</div>
+                        <div class="dock-item">🌐<div class="dock-indicator"></div></div>
+                        <div class="dock-item">🎵</div>
+                        <div class="dock-item">⚙️</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="glass-card">
+            <h2>Complete Project Structure</h2>
+            <div class="file-structure">7k-shell/
+├── src/
+│   ├── shell_main.py              # Main entry point
+│   ├── shell_core/                # Core functionality
+│   │   ├── __init__.py
+│   │   ├── app_registry.py        # App discovery & management
+│   │   ├── settings.py            # Settings persistence
+│   │   ├── icon_cache.py          # Icon caching system
+│   │   ├── animations.py          # Animation engine
+│   │   ├── ipc.py                 # Inter-process communication
+│   │   ├── winapi.py              # Windows API integration
+│   │   └── hotkeys.py             # Global hotkey manager
+│   ├── ui/
+│   │   ├── __init__.py
+│   │   ├── dock.py                # Dock with magnification
+│   │   ├── sidebar.py             # Widget sidebar
+│   │   ├── launcher.py            # Search launcher
+│   │   ├── glass_effect.py        # Liquid glass renderer
+│   │   └── theming.py             # 7K color palette
+│   ├── plugins/
+│   │   ├── __init__.py
+│   │   └── widgets/
+│   │       ├── __init__.py
+│   │       ├── base.py            # Widget base class
+│   │       ├── clock.py           # Clock widget
+│   │       ├── todo.py            # Todo list widget
+│   │       ├── system_stats.py    # System monitor
+│   │       ├── notes.py           # Notes widget
+│   │       ├── weather.py         # Weather widget
+│   │       └── now_playing.py     # Media controls
+│   └── services/
+│       ├── __init__.py
+│       ├── indexer.py             # File indexing service
+│       ├── app_monitor.py         # Running apps monitor
+│       └── media.py               # Media integration
+├── assets/
+│   ├── icons/                     # App icons
+│   ├── sounds/                    # UI sounds
+│   └── fonts/                     # Custom fonts
+├── scripts/
+│   ├── set_user_shell.bat         # User shell installer
+│   ├── set_system_shell.reg       # System shell installer
+│   ├── restore_explorer.bat       # Recovery script
+│   └── build_installer.py         # Build standalone exe
+├── tests/
+│   └── test_*.py                  # Unit tests
+├── requirements.txt               # Python dependencies
+├── README.md                      # Documentation
+├── LICENSE                        # MIT License
+└── setup.py                       # Installation script</div>
+        </div>
+        
+        <div class="glass-card">
+            <h2>Key Implementation Features</h2>
+            <div class="code-preview">
+                <code># Liquid Glass Effect Implementation
+class LiquidGlassWidget(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.setAttribute(Qt.WA_TranslucentBackground)
+        self.setWindowFlags(Qt.FramelessWindowHint)
+        
+        # Enable acrylic blur
+        self.effect = QGraphicsDropShadowEffect()
+        self.effect.setBlurRadius(20)
+        self.effect.setColor(QColor(0, 0, 0, 80))
+        self.setGraphicsEffect(self.effect)
+        
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing)
+        
+        # Liquid glass background
+        gradient = QLinearGradient(0, 0, 0, self.height())
+        gradient.setColorAt(0, QColor(255, 255, 255, 13))
+        gradient.setColorAt(1, QColor(255, 255, 255, 8))
+        
+        painter.fillRect(self.rect(), gradient)
+
+# Dock Magnification Animation
+class DockItem(QWidget):
+    def __init__(self, app_info):
+        self.base_size = 56
+        self.hover_size = 90
+        self.current_size = self.base_size
+        self.animation = QPropertyAnimation(self, b"iconSize")
+        self.animation.setEasingCurve(QEasingCurve.OutCubic)
+        self.animation.setDuration(200)</code>
+            </div>
+        </div>
+        
+        <div class="glass-card download-section">
+            <h2>Download Complete Project</h2>
+            <p style="margin-bottom: 25px;">Get the full 7K Shell source code with all features implemented</p>
+            <button class="download-btn" onclick="downloadProject()">
+                📦 Download 7K-Shell.zip
+                <span class="loading" id="loading" style="display: none;"></span>
+            </button>
+            <p style="margin-top: 20px; font-size: 0.9em; opacity: 0.8;">
+                Includes all source files, assets, documentation, and installation scripts
+            </p>
+        </div>
+    </div>
+    
+    <script>
+    // Complete project files with full implementations
+    const projectFiles = {
+        // Main entry point
+        'src/shell_main.py': `#!/usr/bin/env python
+"""
+7K Shell - Modern Windows Shell Replacement
+Features: Mac-style dock, widget sidebar, spotlight search, liquid glass UI
+"""
+
+import sys
+import os
+from PySide6.QtWidgets import QApplication, QSystemTrayIcon, QMenu
+from PySide6.QtCore import Qt, QTimer, Signal, QObject
+from PySide6.QtGui import QIcon, QFont
+
+# Add src to path
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+from shell_core.settings import Settings
+from shell_core.ipc import SingleInstance
+from shell_core.hotkeys import HotkeyManager
+from shell_core.winapi import WindowsIntegration
+from shell_core.icon_cache import IconCache
+from shell_core.animations import AnimationEngine
+from ui.dock import Dock
+from ui.sidebar import Sidebar
+from ui.launcher import Launcher
+from ui.theming import apply_theme
+from ui.glass_effect import enable_glass_effect
+
+
+class ShellSignals(QObject):
+    """Global signals for shell communication"""
+    app_launched = Signal(str)
+    app_closed = Signal(str)
+    widget_added = Signal(str)
+    settings_changed = Signal(str, object)
+
+
+class SevenKShell:
+    """Main shell application class"""
+    
+    def __init__(self):
+        # Create Qt application
+        self.app = QApplication(sys.argv)
+        self.app.setApplicationName("7K Shell")
+        self.app.setOrganizationName("7K")
+        self.app.setQuitOnLastWindowClosed(False)
+        
+        # Set application style
+        font = QFont("Segoe UI", 10)
+        self.app.setFont(font)
+        
+        # Initialize signals
+        self.signals = ShellSignals()
+        
+        # Load settings
+        self.settings = Settings.load()
+        
+        # Apply theme
+        apply_theme(self.app, self.settings.get("theme", "dark"))
+        
+        # Initialize icon cache
+        self.icon_cache = IconCache()
+        
+        # Initialize animation engine
+        self.animation_engine = AnimationEngine()
+        
+        # Initialize Windows integration
+        self.win_integration = WindowsIntegration()
+        if self.settings.get("hide_taskbar", True):
+            self.win_integration.hide_taskbar()
+        
+        # Create UI components
+        self._create_ui()
+        
+        # Setup system tray
+        self._setup_tray()
+        
+        # Setup hotkeys
+        self._setup_hotkeys()
+        
+        # Setup timers
+        self._setup_timers()
+        
+    def _create_ui(self):
+        """Create main UI components"""
+        # Create dock
+        self.dock = Dock(
+            settings=self.settings,
+            icon_cache=self.icon_cache,
+            animation_engine=self.animation_engine,
+            signals=self.signals
+        )
+        
+        # Create sidebar with widgets
+        self.sidebar = Sidebar(
+            settings=self.settings,
+            signals=self.signals
+        )
+        
+        # Add default widgets
+        self._setup_default_widgets()
+        
+        # Create launcher
+        self.launcher = Launcher(
+            settings=self.settings,
+            signals=self.signals
+        )
+        
+        # Apply glass effects
+        enable_glass_effect(self.dock)
+        enable_glass_effect(self.sidebar)
+        enable_glass_effect(self.launcher)
+        
+    def _setup_default_widgets(self):
+        """Setup default sidebar widgets"""
+        # Import widget plugins
+        from plugins.widgets.todo import TodoWidget
+        from plugins.widgets.clock import ClockWidget
+        from plugins.widgets.system_stats import SystemStatsWidget
+        from plugins.widgets.now_playing import NowPlayingWidget
+        
+        # Add widgets to sidebar
+        widgets = [
+            TodoWidget(self.settings),  # Todo list at top
+            ClockWidget(self.settings),
+            SystemStatsWidget(self.settings),
+            NowPlayingWidget(self.settings)
+        ]
+        
+        for widget in widgets:
+            self.sidebar.add_widget(widget)
+            
+    def _setup_tray(self):
+        """Setup system tray icon"""
+        self.tray_icon = QSystemTrayIcon(self.app)
+        self.tray_icon.setIcon(QIcon("assets/icons/7k-shell.ico"))
+        self.tray_icon.setToolTip("7K Shell")
+        
+        # Create tray menu
+        tray_menu = QMenu()
+        
+        # Add menu items
+        show_action = tray_menu.addAction("Show Dock")
+        show_action.triggered.connect(self.dock.show)
+        
+        settings_action = tray_menu.addAction("Settings")
+        settings_action.triggered.connect(self._show_settings)
+        
+        tray_menu.addSeparator()
+        
+        restart_action = tray_menu.addAction("Restart Shell")
+        restart_action.triggered.connect(self._restart_shell)
+        
+        exit_action = tray_menu.addAction("Exit")
+        exit_action.triggered.connect(self._exit_shell)
+        
+        self.tray_icon.setContextMenu(tray_menu)
+        self.tray_icon.show()
+        
+    def _setup_hotkeys(self):
+        """Setup global hotkeys"""
+        self.hotkey_manager = HotkeyManager()
+        
+        # Launcher hotkey
+        launcher_key = self.settings.get("hotkeys.launcher", "Alt+Space")
+        self.hotkey_manager.register(launcher_key, self.launcher.toggle)
+        
+        # Show desktop
+        desktop_key = self.settings.get("hotkeys.show_desktop", "Win+D")
+        self.hot
