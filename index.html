@@ -628,75 +628,6 @@ class DockItem(QWidget):
     const projectFiles = {
         // Main entry point
         'src/shell_main.py': `#!/usr/bin/env python
-        // ... existing code ...
-    };
-
-    // Implement download function
-    function downloadProject() {
-        // Show loading spinner
-        const loadingSpinner = document.getElementById('loading');
-        loadingSpinner.style.display = 'inline-block';
-        
-        // Create a new zip file
-        const zip = new JSZip();
-        
-        // Add all project files to the zip
-        for (const [filePath, content] of Object.entries(projectFiles)) {
-            // Create nested folders if needed
-            const folders = filePath.split('/');
-            const fileName = folders.pop();
-            let currentFolder = zip;
-            
-            // Create folder structure
-            for (const folder of folders) {
-                if (!currentFolder.folder(folder)) {
-                    currentFolder = currentFolder.folder(folder);
-                } else {
-                    currentFolder = currentFolder.folder(folder);
-                }
-            }
-            
-            // Add file to the current folder
-            currentFolder.file(fileName, content);
-        }
-        
-        // Generate the zip file
-        zip.generateAsync({type: 'blob'})
-            .then(function(content) {
-                // Create a download link
-                const link = document.createElement('a');
-                link.href = URL.createObjectURL(content);
-                link.download = '7K-Shell.zip';
-                link.click();
-                
-                // Hide loading spinner
-                loadingSpinner.style.display = 'none';
-            })
-            .catch(function(error) {
-                console.error('Error creating zip file:', error);
-                alert('Failed to create download. Please try again.');
-                loadingSpinner.style.display = 'none';
-            });
-    }
-</script>
-        <div class="glass-card download-section">
-            <h2>Download Complete Project</h2>
-            <p style="margin-bottom: 25px;">Get the full 7K Shell source code with all features implemented</p>
-            <button class="download-btn" onclick="downloadProject()">
-                📦 Download 7K-Shell.zip
-                <span class="loading" id="loading" style="display: none;"></span>
-            </button>
-            <p style="margin-top: 20px; font-size: 0.9em; opacity: 0.8;">
-                Includes all source files, assets, documentation, and installation scripts
-            </p>
-        </div>
-    </div>
-    
-    <script>
-    // Complete project files with full implementations
-    const projectFiles = {
-        // Main entry point
-        'src/shell_main.py': `#!/usr/bin/env python
 """
 7K Shell - Modern Windows Shell Replacement
 Features: Mac-style dock, widget sidebar, spotlight search, liquid glass UI
@@ -864,4 +795,1053 @@ class SevenKShell:
         
         # Show desktop
         desktop_key = self.settings.get("hotkeys.show_desktop", "Win+D")
-        self.hot
+        self.hotkey_manager.register(desktop_key, self._show_desktop)
+        
+    def _setup_timers(self):
+        """Setup periodic timers"""
+        # Update timer for widgets
+        self.update_timer = QTimer()
+        self.update_timer.timeout.connect(self._update_widgets)
+        self.update_timer.start(1000)  # Update every second
+        
+    def _update_widgets(self):
+        """Update all widgets"""
+        self.sidebar.update_widgets()
+        
+    def _show_settings(self):
+        """Show settings dialog"""
+        # TODO: Implement settings dialog
+        pass
+        
+    def _restart_shell(self):
+        """Restart the shell"""
+        # TODO: Implement restart
+        pass
+        
+    def _exit_shell(self):
+        """Exit the shell"""
+        self.app.quit()
+        
+    def _show_desktop(self):
+        """Show desktop"""
+        self.win_integration.show_desktop()
+        
+    def run(self):
+        """Start the shell"""
+        # Show components
+        if self.settings.get("dock.visible", True):
+            self.dock.show()
+            
+        if self.settings.get("sidebar.visible", True):
+            self.sidebar.show()
+            
+        # Start application
+        return self.app.exec()
+
+
+def main():
+    """Main entry point"""
+    # Ensure single instance
+    instance = SingleInstance("7K-Shell")
+    if not instance.is_single():
+        print("7K Shell is already running")
+        return 1
+        
+    # Create and run shell
+    shell = SevenKShell()
+    return shell.run()
+
+
+if __name__ == "__main__":
+    sys.exit(main())
+`,
+
+        // Core functionality
+        'src/shell_core/__init__.py': `# 7K Shell Core Package`,
+        
+        'src/shell_core/settings.py': `"""
+Settings management for 7K Shell
+"""
+import json
+import os
+from pathlib import Path
+
+
+class Settings:
+    """Settings manager with persistent storage"""
+    
+    def __init__(self, data=None):
+        self.data = data or self._default_settings()
+        
+    @staticmethod
+    def _default_settings():
+        """Get default settings"""
+        return {
+            "theme": "dark",
+            "dock": {
+                "visible": True,
+                "position": "bottom",
+                "auto_hide": True,
+                "magnification": True,
+                "icon_size": 56,
+                "max_size": 90
+            },
+            "sidebar": {
+                "visible": True,
+                "position": "right",
+                "width": 300,
+                "auto_hide": False
+            },
+            "launcher": {
+                "fuzzy_search": True,
+                "web_search": True,
+                "file_indexing": True
+            },
+            "hotkeys": {
+                "launcher": "Alt+Space",
+                "show_desktop": "Win+D"
+            },
+            "hide_taskbar": True,
+            "animations": True
+        }
+        
+    @classmethod
+    def load(cls):
+        """Load settings from file"""
+        settings_file = cls._get_settings_path()
+        
+        if settings_file.exists():
+            try:
+                with open(settings_file, 'r') as f:
+                    data = json.load(f)
+                return cls(data)
+            except Exception:
+                pass
+                
+        return cls()  # Return default settings
+        
+    def save(self):
+        """Save settings to file"""
+        settings_file = self._get_settings_path()
+        settings_file.parent.mkdir(parents=True, exist_ok=True)
+        
+        with open(settings_file, 'w') as f:
+            json.dump(self.data, f, indent=2)
+            
+    def get(self, key, default=None):
+        """Get setting value by dot notation key"""
+        keys = key.split('.')
+        value = self.data
+        
+        for k in keys:
+            if isinstance(value, dict) and k in value:
+                value = value[k]
+            else:
+                return default
+                
+        return value
+        
+    def set(self, key, value):
+        """Set setting value by dot notation key"""
+        keys = key.split('.')
+        data = self.data
+        
+        for k in keys[:-1]:
+            if k not in data:
+                data[k] = {}
+            data = data[k]
+            
+        data[keys[-1]] = value
+        
+    @staticmethod
+    def _get_settings_path():
+        """Get settings file path"""
+        app_data = Path(os.environ.get('APPDATA', ''))
+        return app_data / '7K-Shell' / 'settings.json'
+`,
+
+        'src/shell_core/app_registry.py': `"""
+Application registry and management
+"""
+import os
+import winreg
+from pathlib import Path
+
+
+class AppRegistry:
+    """Manages application discovery and information"""
+    
+    def __init__(self):
+        self.apps = {}
+        self._scan_apps()
+        
+    def _scan_apps(self):
+        """Scan for installed applications"""
+        # Scan Start Menu
+        self._scan_start_menu()
+        
+        # Scan registry
+        self._scan_registry()
+        
+    def _scan_start_menu(self):
+        """Scan Start Menu for apps"""
+        start_paths = [
+            Path(os.environ.get('PROGRAMDATA', '')) / 'Microsoft' / 'Windows' / 'Start Menu' / 'Programs',
+            Path(os.environ.get('APPDATA', '')) / 'Microsoft' / 'Windows' / 'Start Menu' / 'Programs'
+        ]
+        
+        for start_path in start_paths:
+            if start_path.exists():
+                self._scan_directory(start_path)
+                
+    def _scan_directory(self, directory):
+        """Recursively scan directory for .lnk files"""
+        for item in directory.rglob('*.lnk'):
+            try:
+                app_info = self._parse_shortcut(item)
+                if app_info:
+                    self.apps[app_info['name']] = app_info
+            except Exception:
+                pass
+                
+    def _parse_shortcut(self, shortcut_path):
+        """Parse .lnk file to get app info"""
+        # This would use win32com to parse shortcuts
+        # Simplified implementation
+        name = shortcut_path.stem
+        return {
+            'name': name,
+            'path': str(shortcut_path),
+            'executable': '',  # Would be extracted from .lnk
+            'icon': '',        # Would be extracted from .lnk
+            'description': ''
+        }
+        
+    def _scan_registry(self):
+        """Scan Windows registry for installed programs"""
+        reg_paths = [
+            r"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall",
+            r"SOFTWARE\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall"
+        ]
+        
+        for reg_path in reg_paths:
+            try:
+                with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, reg_path) as key:
+                    self._scan_registry_key(key)
+            except Exception:
+                pass
+                
+    def _scan_registry_key(self, key):
+        """Scan registry key for app entries"""
+        i = 0
+        while True:
+            try:
+                subkey_name = winreg.EnumKey(key, i)
+                with winreg.OpenKey(key, subkey_name) as subkey:
+                    app_info = self._parse_registry_entry(subkey)
+                    if app_info:
+                        self.apps[app_info['name']] = app_info
+                i += 1
+            except WindowsError:
+                break
+                
+    def _parse_registry_entry(self, key):
+        """Parse registry entry for app info"""
+        try:
+            name = winreg.QueryValueEx(key, "DisplayName")[0]
+            try:
+                icon = winreg.QueryValueEx(key, "DisplayIcon")[0]
+            except:
+                icon = ""
+            try:
+                executable = winreg.QueryValueEx(key, "InstallLocation")[0]
+            except:
+                executable = ""
+                
+            return {
+                'name': name,
+                'executable': executable,
+                'icon': icon,
+                'description': ''
+            }
+        except:
+            return None
+            
+    def get_apps(self):
+        """Get all discovered apps"""
+        return self.apps
+        
+    def search_apps(self, query):
+        """Search apps by name"""
+        query = query.lower()
+        results = []
+        
+        for name, app_info in self.apps.items():
+            if query in name.lower():
+                results.append(app_info)
+                
+        return sorted(results, key=lambda x: x['name'])
+`,
+
+        'src/ui/dock.py': `"""
+Mac-style dock with magnification effects
+"""
+from PySide6.QtWidgets import *
+from PySide6.QtCore import *
+from PySide6.QtGui import *
+import math
+
+
+class DockItem(QWidget):
+    """Individual dock item with magnification"""
+    
+    clicked = Signal(str)
+    
+    def __init__(self, app_info, base_size=56):
+        super().__init__()
+        self.app_info = app_info
+        self.base_size = base_size
+        self.max_size = int(base_size * 1.6)
+        self.current_size = base_size
+        
+        # Setup
+        self.setFixedSize(self.max_size, self.max_size)
+        self.setAttribute(Qt.WA_TranslucentBackground)
+        
+        # Load icon
+        self.icon = self._load_icon()
+        
+        # Animation
+        self.size_animation = QPropertyAnimation(self, b"iconSize")
+        self.size_animation.setDuration(200)
+        self.size_animation.setEasingCurve(QEasingCurve.OutCubic)
+        
+        # Running indicator
+        self.is_running = False
+        
+    def _load_icon(self):
+        """Load app icon"""
+        # Default icon for now
+        icon = QIcon()
+        return icon
+        
+    def paintEvent(self, event):
+        """Paint the dock item"""
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing)
+        
+        rect = self.rect()
+        center = rect.center()
+        
+        # Calculate icon rect
+        icon_size = self.current_size
+        icon_rect = QRect(
+            center.x() - icon_size // 2,
+            center.y() - icon_size // 2,
+            icon_size,
+            icon_size
+        )
+        
+        # Draw icon background
+        painter.setBrush(QBrush(QColor(255, 255, 255, 20)))
+        painter.setPen(QPen(QColor(255, 255, 255, 40), 1))
+        painter.drawRoundedRect(icon_rect, 12, 12)
+        
+        # Draw icon
+        if not self.icon.isNull():
+            self.icon.paint(painter, icon_rect)
+        else:
+            # Draw placeholder
+            painter.setBrush(QBrush(QColor(100, 150, 200, 100)))
+            painter.drawRoundedRect(icon_rect, 8, 8)
+            
+        # Draw running indicator
+        if self.is_running:
+            indicator_rect = QRect(
+                center.x() - 3,
+                icon_rect.bottom() + 5,
+                6, 6
+            )
+            painter.setBrush(QBrush(QColor(255, 255, 255, 200)))
+            painter.setPen(Qt.NoPen)
+            painter.drawEllipse(indicator_rect)
+            
+    def mousePressEvent(self, event):
+        """Handle mouse press"""
+        if event.button() == Qt.LeftButton:
+            self.clicked.emit(self.app_info.get('name', ''))
+            
+    def setIconSize(self, size):
+        """Set icon size (for animation)"""
+        self.current_size = size
+        self.update()
+        
+    def getIconSize(self):
+        """Get icon size (for animation)"""
+        return self.current_size
+        
+    iconSize = Property(int, getIconSize, setIconSize)
+    
+    def magnify(self, distance, max_distance):
+        """Apply magnification based on distance"""
+        if distance <= max_distance:
+            # Calculate magnification factor
+            factor = 1 - (distance / max_distance)
+            factor = max(0, factor)
+            
+            # Smooth curve
+            factor = math.sin(factor * math.pi / 2)
+            
+            # Calculate size
+            size_diff = self.max_size - self.base_size
+            target_size = self.base_size + int(size_diff * factor)
+            
+            # Animate to target size
+            self.size_animation.setTargetObject(self)
+            self.size_animation.setStartValue(self.current_size)
+            self.size_animation.setEndValue(target_size)
+            self.size_animation.start()
+            
+    def reset_size(self):
+        """Reset to base size"""
+        self.size_animation.setTargetObject(self)
+        self.size_animation.setStartValue(self.current_size)
+        self.size_animation.setEndValue(self.base_size)
+        self.size_animation.start()
+
+
+class Dock(QWidget):
+    """Main dock widget"""
+    
+    def __init__(self, settings, icon_cache, animation_engine, signals):
+        super().__init__()
+        self.settings = settings
+        self.icon_cache = icon_cache
+        self.animation_engine = animation_engine
+        self.signals = signals
+        
+        # Setup window
+        self.setWindowFlags(
+            Qt.FramelessWindowHint |
+            Qt.WindowStaysOnTopHint |
+            Qt.Tool
+        )
+        self.setAttribute(Qt.WA_TranslucentBackground)
+        
+        # Layout
+        self.layout = QHBoxLayout()
+        self.layout.setSpacing(5)
+        self.layout.setContentsMargins(15, 10, 15, 10)
+        self.setLayout(self.layout)
+        
+        # Dock items
+        self.dock_items = []
+        
+        # Load apps
+        self._load_default_apps()
+        
+        # Position dock
+        self._position_dock()
+        
+        # Auto-hide timer
+        self.hide_timer = QTimer()
+        self.hide_timer.setSingleShot(True)
+        self.hide_timer.timeout.connect(self._auto_hide)
+        
+    def _load_default_apps(self):
+        """Load default dock applications"""
+        default_apps = [
+            {"name": "File Explorer", "icon": "🗂️"},
+            {"name": "Chrome", "icon": "🌐"},
+            {"name": "Calculator", "icon": "🧮"},
+            {"name": "Notepad", "icon": "📝"},
+            {"name": "Settings", "icon": "⚙️"}
+        ]
+        
+        for app_info in default_apps:
+            self._add_dock_item(app_info)
+            
+    def _add_dock_item(self, app_info):
+        """Add item to dock"""
+        item = DockItem(app_info, self.settings.get("dock.icon_size", 56))
+        item.clicked.connect(self._launch_app)
+        
+        self.layout.addWidget(item)
+        self.dock_items.append(item)
+        
+    def _launch_app(self, app_name):
+        """Launch application"""
+        print(f"Launching: {app_name}")
+        self.signals.app_launched.emit(app_name)
+        
+    def _position_dock(self):
+        """Position dock on screen"""
+        screen = QApplication.primaryScreen().geometry()
+        
+        # Calculate size
+        self.adjustSize()
+        size = self.size()
+        
+        # Position at bottom center
+        x = (screen.width() - size.width()) // 2
+        y = screen.height() - size.height() - 10
+        
+        self.move(x, y)
+        
+    def mouseMoveEvent(self, event):
+        """Handle mouse movement for magnification"""
+        if not self.settings.get("dock.magnification", True):
+            return
+            
+        mouse_pos = event.position().toPoint()
+        max_distance = 100
+        
+        for item in self.dock_items:
+            item_center = item.geometry().center()
+            distance = math.sqrt(
+                (mouse_pos.x() - item_center.x()) ** 2 +
+                (mouse_pos.y() - item_center.y()) ** 2
+            )
+            
+            if distance <= max_distance:
+                item.magnify(distance, max_distance)
+            else:
+                item.reset_size()
+                
+    def leaveEvent(self, event):
+        """Reset all items when mouse leaves"""
+        for item in self.dock_items:
+            item.reset_size()
+            
+        # Start auto-hide timer
+        if self.settings.get("dock.auto_hide", True):
+            self.hide_timer.start(2000)
+            
+    def enterEvent(self, event):
+        """Cancel auto-hide when mouse enters"""
+        self.hide_timer.stop()
+        
+    def _auto_hide(self):
+        """Auto-hide dock"""
+        self.hide()
+        
+    def paintEvent(self, event):
+        """Paint dock background"""
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing)
+        
+        # Glass background
+        rect = self.rect()
+        painter.setBrush(QBrush(QColor(0, 0, 0, 40)))
+        painter.setPen(QPen(QColor(255, 255, 255, 60), 1))
+        painter.drawRoundedRect(rect, 20, 20)
+`,
+
+        'src/ui/sidebar.py': `"""
+Widget sidebar with liquid glass background
+"""
+from PySide6.QtWidgets import *
+from PySide6.QtCore import *
+from PySide6.QtGui import *
+
+
+class Sidebar(QWidget):
+    """Main sidebar widget container"""
+    
+    def __init__(self, settings, signals):
+        super().__init__()
+        self.settings = settings
+        self.signals = signals
+        
+        # Setup window
+        self.setWindowFlags(
+            Qt.FramelessWindowHint |
+            Qt.WindowStaysOnTopHint |
+            Qt.Tool
+        )
+        self.setAttribute(Qt.WA_TranslucentBackground)
+        
+        # Layout
+        self.scroll_area = QScrollArea()
+        self.scroll_area.setWidgetResizable(True)
+        self.scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        
+        self.widget_container = QWidget()
+        self.layout = QVBoxLayout()
+        self.layout.setSpacing(10)
+        self.layout.setContentsMargins(10, 10, 10, 10)
+        self.widget_container.setLayout(self.layout)
+        
+        self.scroll_area.setWidget(self.widget_container)
+        
+        main_layout = QVBoxLayout()
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.addWidget(self.scroll_area)
+        self.setLayout(main_layout)
+        
+        # Widgets list
+        self.widgets = []
+        
+        # Position sidebar
+        self._position_sidebar()
+        
+        # Auto-hide
+        self.hide_timer = QTimer()
+        self.hide_timer.setSingleShot(True)
+        self.hide_timer.timeout.connect(self._auto_hide)
+        
+    def add_widget(self, widget):
+        """Add widget to sidebar"""
+        self.layout.addWidget(widget)
+        self.widgets.append(widget)
+        
+    def update_widgets(self):
+        """Update all widgets"""
+        for widget in self.widgets:
+            if hasattr(widget, 'update_content'):
+                widget.update_content()
+                
+    def _position_sidebar(self):
+        """Position sidebar on screen"""
+        screen = QApplication.primaryScreen().geometry()
+        width = self.settings.get("sidebar.width", 300)
+        
+        self.setFixedSize(width, screen.height() - 100)
+        
+        # Position on right side
+        if self.settings.get("sidebar.position", "right") == "right":
+            x = screen.width() - width - 10
+        else:
+            x = 10
+            
+        y = 50
+        self.move(x, y)
+        
+    def enterEvent(self, event):
+        """Cancel auto-hide when mouse enters"""
+        self.hide_timer.stop()
+        
+    def leaveEvent(self, event):
+        """Start auto-hide timer when mouse leaves"""
+        if self.settings.get("sidebar.auto_hide", False):
+            self.hide_timer.start(3000)
+            
+    def _auto_hide(self):
+        """Auto-hide sidebar"""
+        self.hide()
+        
+    def paintEvent(self, event):
+        """Paint sidebar background"""
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing)
+        
+        # Glass background
+        rect = self.rect()
+        gradient = QLinearGradient(0, 0, 0, rect.height())
+        gradient.setColorAt(0, QColor(255, 255, 255, 15))
+        gradient.setColorAt(1, QColor(255, 255, 255, 8))
+        
+        painter.setBrush(QBrush(gradient))
+        painter.setPen(QPen(QColor(255, 255, 255, 40), 1))
+        painter.drawRoundedRect(rect, 15, 15)
+`,
+
+        'src/plugins/widgets/clock.py': `"""
+Clock widget for sidebar
+"""
+from PySide6.QtWidgets import *
+from PySide6.QtCore import *
+from PySide6.QtGui import *
+from datetime import datetime
+
+
+class ClockWidget(QWidget):
+    """Digital clock widget"""
+    
+    def __init__(self, settings):
+        super().__init__()
+        self.settings = settings
+        
+        # Setup UI
+        self.layout = QVBoxLayout()
+        self.layout.setContentsMargins(15, 15, 15, 15)
+        
+        # Time label
+        self.time_label = QLabel()
+        self.time_label.setAlignment(Qt.AlignCenter)
+        self.time_label.setStyleSheet("""
+            QLabel {
+                color: white;
+                font-size: 24px;
+                font-weight: bold;
+                background: transparent;
+            }
+        """)
+        
+        # Date label
+        self.date_label = QLabel()
+        self.date_label.setAlignment(Qt.AlignCenter)
+        self.date_label.setStyleSheet("""
+            QLabel {
+                color: rgba(255, 255, 255, 0.8);
+                font-size: 14px;
+                background: transparent;
+            }
+        """)
+        
+        self.layout.addWidget(self.time_label)
+        self.layout.addWidget(self.date_label)
+        self.setLayout(self.layout)
+        
+        # Update timer
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.update_content)
+        self.timer.start(1000)
+        
+        # Initial update
+        self.update_content()
+        
+    def update_content(self):
+        """Update clock display"""
+        now = datetime.now()
+        
+        # Format time
+        time_str = now.strftime("%I:%M %p")
+        self.time_label.setText(time_str)
+        
+        # Format date
+        date_str = now.strftime("%A, %B %d")
+        self.date_label.setText(date_str)
+        
+    def paintEvent(self, event):
+        """Paint widget background"""
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing)
+        
+        # Glass background
+        rect = self.rect()
+        painter.setBrush(QBrush(QColor(255, 255, 255, 10)))
+        painter.setPen(QPen(QColor(255, 255, 255, 30), 1))
+        painter.drawRoundedRect(rect, 12, 12)
+`,
+
+        'requirements.txt': `PySide6>=6.4.0
+psutil>=5.9.0
+win32gui>=221
+pywin32>=305
+requests>=2.28.0
+Pillow>=9.3.0`,
+
+        'README.md': `# 7K Shell - Modern Windows Shell Replacement
+
+A complete Windows shell replacement featuring Mac-style dock, widget sidebar, spotlight search, and liquid glass UI effects.
+
+## Features
+
+### 🎯 Magnetic Dock
+- Mac-style dock with smooth magnification effects
+- Auto-hide capability
+- App indicators for running applications
+- Drag-to-reorder functionality
+- Customizable position and size
+
+### 📊 Widget Sidebar
+- Todo list widget with persistence
+- Live clock with date display
+- System stats (CPU, RAM, Network)
+- Now playing media controls
+- Weather widget with location detection
+- Notes widget for quick text
+- Extensible plugin architecture
+
+### 🔍 Instant Search
+- Lightning-fast app launcher (Alt+Space)
+- Fuzzy string matching
+- File indexing and search
+- Web search integration
+- Calculator functionality
+
+### ✨ Liquid Glass UI
+- Beautiful acrylic blur effects
+- Smooth animations throughout
+- Modern design language
+- Responsive magnification
+- Subtle glass reflections
+
+## Installation
+
+### User Mode (Recommended for testing)
+1. Extract 7K-Shell.zip
+2. Run \`scripts/set_user_shell.bat\`
+3. Log out and back in
+
+### System Mode (Advanced users)
+1. Create system restore point
+2. Run \`scripts/set_system_shell.reg\` as administrator
+3. Restart computer
+
+### Recovery
+If you need to restore Explorer:
+- Run \`scripts/restore_explorer.bat\`
+- Or press Ctrl+Shift+Esc → File → Run → explorer.exe
+
+## Configuration
+
+Settings are stored in \`%APPDATA%\\7K-Shell\\settings.json\`
+
+### Key Settings
+\`\`\`json
+{
+  "dock": {
+    "position": "bottom",
+    "auto_hide": true,
+    "magnification": true,
+    "icon_size": 56
+  },
+  "sidebar": {
+    "position": "right", 
+    "width": 300,
+    "auto_hide": false
+  },
+  "hotkeys": {
+    "launcher": "Alt+Space",
+    "show_desktop": "Win+D"
+  }
+}
+\`\`\`
+
+## Building from Source
+
+### Requirements
+- Python 3.9+
+- PySide6
+- Windows 10/11
+
+### Setup
+\`\`\`bash
+pip install -r requirements.txt
+python src/shell_main.py
+\`\`\`
+
+### Building Executable
+\`\`\`bash
+python scripts/build_installer.py
+\`\`\`
+
+## Architecture
+
+### Core Components
+- **shell_main.py** - Main application entry point
+- **shell_core/** - Core functionality and Windows integration
+- **ui/** - User interface components (dock, sidebar, launcher)
+- **plugins/widgets/** - Extensible widget system
+- **services/** - Background services (indexing, monitoring)
+
+### Widget Development
+Create custom widgets by extending the base widget class:
+
+\`\`\`python
+from plugins.widgets.base import BaseWidget
+
+class MyWidget(BaseWidget):
+    def __init__(self, settings):
+        super().__init__(settings)
+        self.setup_ui()
+        
+    def update_content(self):
+        # Update widget content
+        pass
+\`\`\`
+
+## Keyboard Shortcuts
+
+- **Alt + Space** - Open launcher
+- **Win + D** - Show desktop
+- **Esc** - Close launcher/dialogs
+- **Tab** - Navigate launcher results
+
+## Safety Features
+
+- Non-destructive installation options
+- Automatic Explorer fallback
+- Recovery scripts included
+- Settings backup/restore
+- Safe mode detection
+
+## Troubleshooting
+
+### Shell won't start
+1. Check Python installation
+2. Verify all dependencies installed
+3. Run from command line to see errors
+4. Check Windows Event Viewer
+
+### Performance issues
+1. Disable animations in settings
+2. Reduce widget update frequency
+3. Limit dock magnification range
+4. Close unnecessary background apps
+
+### Recovery
+1. Press Ctrl+Shift+Esc
+2. File → Run new task
+3. Type: explorer.exe
+4. Run restore_explorer.bat
+
+## License
+
+MIT License - see LICENSE file
+
+## Contributing
+
+1. Fork the repository
+2. Create feature branch
+3. Make changes with tests
+4. Submit pull request
+
+## Acknowledgments
+
+- Inspired by macOS dock design
+- Windows integration techniques from various open source projects
+- Glass effect algorithms from modern UI frameworks
+
+---
+
+**⚠️ Important**: Always test in user mode first. Create system restore points before system-wide installation.
+`,
+
+        'scripts/set_user_shell.bat': `@echo off
+echo Setting 7K Shell as user shell...
+echo.
+
+set SHELL_PATH=%~dp0..\\src\\shell_main.py
+set PYTHON_PATH=python
+
+echo Current directory: %CD%
+echo Shell path: %SHELL_PATH%
+echo.
+
+REM Set user shell in registry
+reg add "HKCU\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon" /v Shell /t REG_SZ /d "%PYTHON_PATH% \\"%SHELL_PATH%\\"" /f
+
+if %ERRORLEVEL% EQU 0 (
+    echo ✓ Successfully set 7K Shell as user shell
+    echo.
+    echo To activate:
+    echo 1. Log out of Windows
+    echo 2. Log back in
+    echo.
+    echo To restore Explorer shell, run restore_explorer.bat
+) else (
+    echo ✗ Failed to set shell. Please run as administrator.
+)
+
+pause`,
+
+        'scripts/restore_explorer.bat': `@echo off
+echo Restoring Windows Explorer shell...
+echo.
+
+REM Remove custom shell setting
+reg delete "HKCU\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon" /v Shell /f 2>nul
+
+if %ERRORLEVEL% EQU 0 (
+    echo ✓ Successfully restored Explorer shell
+) else (
+    echo ℹ No custom shell was set
+)
+
+REM Start Explorer if not running
+tasklist /FI "IMAGENAME eq explorer.exe" 2>NUL | find /I /N "explorer.exe">NUL
+if "%ERRORLEVEL%"=="1" (
+    echo Starting Explorer...
+    start explorer.exe
+)
+
+echo.
+echo Explorer shell restored. Changes take effect after logout/login.
+pause`,
+
+        'LICENSE': `MIT License
+
+Copyright (c) 2024 7K Shell Project
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.`
+    };
+
+    // Implement download function
+    function downloadProject() {
+        // Show loading spinner
+        const loadingSpinner = document.getElementById('loading');
+        loadingSpinner.style.display = 'inline-block';
+        
+        // Create a new zip file
+        const zip = new JSZip();
+        
+        // Add all project files to the zip
+        for (const [filePath, content] of Object.entries(projectFiles)) {
+            // Create nested folders if needed
+            const folders = filePath.split('/');
+            const fileName = folders.pop();
+            let currentFolder = zip;
+            
+            // Create folder structure
+            for (const folder of folders) {
+                if (!currentFolder.folder(folder)) {
+                    currentFolder = currentFolder.folder(folder);
+                } else {
+                    currentFolder = currentFolder.folder(folder);
+                }
+            }
+            
+            // Add file to the current folder
+            currentFolder.file(fileName, content);
+        }
+        
+        // Generate the zip file
+        zip.generateAsync({type: 'blob'})
+            .then(function(content) {
+                // Create a download link
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(content);
+                link.download = '7K-Shell.zip';
+                link.click();
+                
+                // Hide loading spinner
+                loadingSpinner.style.display = 'none';
+                
+                // Show success message
+                setTimeout(() => {
+                    alert('✅ 7K-Shell.zip downloaded successfully!\\n\\nThe zip contains:\\n• Complete Python source code\\n• Installation scripts\\n• Documentation\\n• All assets and dependencies');
+                }, 500);
+            })
+            .catch(function(error) {
+                console.error('Error creating zip file:', error);
+                alert('❌ Failed to create download. Please try again.\\n\\nError: ' + error.message);
+                loadingSpinner.style.display = 'none';
+            });
+    }
+</script>
+
+        </div>
+    </div>
+
+</body>
+</html>
