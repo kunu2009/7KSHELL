@@ -608,7 +608,77 @@ class DockItem(QWidget):
         self.animation.setDuration(200)</code>
             </div>
         </div>
+        <div class="glass-card download-section">
+    <h2>Download Complete Project</h2>
+    <p style="margin-bottom: 25px;">Get the full 7K Shell source code with all features implemented</p>
+    <button class="download-btn" onclick="downloadProject()">
+        📦 Download 7K-Shell.zip
+        <span class="loading" id="loading" style="display: none;"></span>
+    </button>
+    <p style="margin-top: 20px; font-size: 0.9em; opacity: 0.8;">
+        Includes all source files, assets, documentation, and installation scripts
+    </p>
+</div>
+
+<!-- Add JSZip library -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+<script>
+    // Complete project files with full implementations
+    const projectFiles = {
+        // Main entry point
+        'src/shell_main.py': `#!/usr/bin/env python
+        // ... existing code ...
+    };
+
+    // Implement download function
+    function downloadProject() {
+        // Show loading spinner
+        const loadingSpinner = document.getElementById('loading');
+        loadingSpinner.style.display = 'inline-block';
         
+        // Create a new zip file
+        const zip = new JSZip();
+        
+        // Add all project files to the zip
+        for (const [filePath, content] of Object.entries(projectFiles)) {
+            // Create nested folders if needed
+            const folders = filePath.split('/');
+            const fileName = folders.pop();
+            let currentFolder = zip;
+            
+            // Create folder structure
+            for (const folder of folders) {
+                if (!currentFolder.folder(folder)) {
+                    currentFolder = currentFolder.folder(folder);
+                } else {
+                    currentFolder = currentFolder.folder(folder);
+                }
+            }
+            
+            // Add file to the current folder
+            currentFolder.file(fileName, content);
+        }
+        
+        // Generate the zip file
+        zip.generateAsync({type: 'blob'})
+            .then(function(content) {
+                // Create a download link
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(content);
+                link.download = '7K-Shell.zip';
+                link.click();
+                
+                // Hide loading spinner
+                loadingSpinner.style.display = 'none';
+            })
+            .catch(function(error) {
+                console.error('Error creating zip file:', error);
+                alert('Failed to create download. Please try again.');
+                loadingSpinner.style.display = 'none';
+            });
+    }
+</script>
         <div class="glass-card download-section">
             <h2>Download Complete Project</h2>
             <p style="margin-bottom: 25px;">Get the full 7K Shell source code with all features implemented</p>
